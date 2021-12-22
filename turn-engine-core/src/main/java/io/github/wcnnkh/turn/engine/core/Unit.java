@@ -1,13 +1,15 @@
 package io.github.wcnnkh.turn.engine.core;
 
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 战斗单位
@@ -17,6 +19,9 @@ import lombok.Data;
  */
 @Schema(description = "战斗单位")
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class Unit implements Serializable, Cloneable {
 	private static final long serialVersionUID = 1L;
 	private String id;
@@ -52,31 +57,5 @@ public class Unit implements Serializable, Cloneable {
 	 */
 	public boolean isDeath() {
 		return attributes.getHp() <= 0;
-	}
-
-	/**
-	 * 下一轮(将buff作用到属性上并清理buff)
-	 */
-	public void nextRound() {
-		if (buffs == null) {
-			return;
-		}
-		Iterator<Buff> iterator = buffs.iterator();
-		while (iterator.hasNext()) {
-			Buff buff = iterator.next();
-			if (!buff.isActive()) {
-				iterator.remove();
-				continue;
-			}
-
-			attributes.merge(buff.getAttributes());
-			if (buff.getRounds() > 0) {
-				buff.setRounds(buff.getRounds() - 1);
-			}
-
-			if (!buff.isActive()) {
-				iterator.remove();
-			}
-		}
 	}
 }

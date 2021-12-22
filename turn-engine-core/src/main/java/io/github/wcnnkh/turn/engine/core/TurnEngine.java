@@ -1,6 +1,7 @@
 package io.github.wcnnkh.turn.engine.core;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -77,15 +78,69 @@ public class TurnEngine {
 		}
 
 		for (Unit unit : this.leftUnits) {
-			unit.nextRound();
+			nextRound(unit);
 		}
 
 		for (Unit unit : this.rightUnits) {
-			unit.nextRound();
+			nextRound(unit);
 		}
-
 		this.rounds++;
 		return reports.stream().map((e) -> e.clone()).collect(Collectors.toList());
+	}
+
+	/**
+	 * 进行一轮的数值运算
+	 * 
+	 * @param unit
+	 */
+	private void nextRound(Unit unit) {
+		if (unit.getBuffs() == null) {
+			return;
+		}
+		Iterator<Buff> iterator = unit.getBuffs().iterator();
+		while (iterator.hasNext()) {
+			Buff buff = iterator.next();
+			if (!buff.isActive()) {
+				iterator.remove();
+				continue;
+			}
+
+			// 计算
+			calculation(unit.getAttributes(), buff);
+			// -1表示永久
+			if (buff.getRounds() > 0) {
+				buff.setRounds(buff.getRounds() - 1);
+			}
+
+			if (!buff.isActive()) {
+				iterator.remove();
+			}
+		}
+	}
+
+	/**
+	 * 计算(将buff作用在实例属性上)<br/>
+	 * 处理任意战斗属性在此方法上扩展
+	 * 
+	 * @param attributes
+	 * @param buff
+	 */
+	private void calculation(Attributes attributes, Buff buff) {
+		Attributes target = buff.calculation(attributes);
+		if (buff.isDebuff()) {
+			// 伤害
+			// 攻击-防御就是伤害
+			long value = target.getAtt() - attributes.getDef();
+			if (value <= 0) {
+				value = 1;
+			}
+			attributes.setHp(attributes.getHp() - target.getHp());
+			attributes.setHp(attributes.getHp() - value);
+		} else {
+			// 回复
+			attributes.setHp(attributes.getHp() + target.getHp());
+			attributes.setHp(attributes.getHp() + target.getAtt());
+		}
 	}
 
 	/**
@@ -101,7 +156,7 @@ public class TurnEngine {
 				.collect(Collectors.toList());
 		if (actions.isEmpty()) {
 			// 没有可用的技能
-			throw new IllegalStateException("Should never get here");
+			throw new TurnEngineException("Should never get here");
 		}
 
 		// 只有一个行为，直接使用
@@ -129,7 +184,7 @@ public class TurnEngine {
 			}
 		}
 		// 不可能到这里，除非没有技能
-		throw new IllegalStateException("Should never get here");
+		throw new TurnEngineException("Should never get here");
 	}
 
 	/**
@@ -145,48 +200,23 @@ public class TurnEngine {
 		Action action = getActions(left, leftUnits, rightUnits);
 		left.getActions().forEach((e) -> {
 			if (e.getAnger() < e.getMaxAnger()) {
-				e.setAnger(e.getAnger() + 1);
+				e.setAnger(e.getAnger() + e.getAngerIncrease());
 			}
 		});
 
 		List<Unit> attackers = new ArrayList<Unit>();
-		for (Buff actionBuff : action.getBuffs()) {
-			Buff buff = actionBuff.getBuff();
-			Buff debuff = actionBuff.getDebuff();
-			if (action.isAoe()) {
-				if (buff.isActive()) {
-					for (Unit unit : leftUnits) {
-						unit.addBuff(buff);
-						attackers.add(unit);
+		for (Buff buff : action.getBuffs()) {
+			if (buff.isActive()) {
+				for (Unit unit : buff.isDebuff() ? rightUnits : leftUnits) {
+					if (unit.isDeath()) {
+						continue;
 					}
-				}
 
-				if (debuff.isActive()) {
-					for (Unit unit : rightUnits) {
-						unit.addBuff(debuff);
-						attackers.add(unit);
-					}
-				}
-			} else {
-				if (buff.isActive()) {
-					for (Unit unit : leftUnits) {
-						if (unit.isDeath()) {
-							continue;
-						}
+					unit.addBuff(new CombatBuff(buff, left));
+					attackers.add(unit);
 
-						unit.addBuff(buff);
-						attackers.add(unit);
-					}
-				}
-
-				if (debuff.isActive()) {
-					for (Unit unit : rightUnits) {
-						if (unit.isDeath()) {
-							continue;
-						}
-
-						unit.addBuff(debuff);
-						attackers.add(unit);
+					if (!action.isAoe()) {
+						break;
 					}
 				}
 			}
