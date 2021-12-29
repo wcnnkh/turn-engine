@@ -13,11 +13,11 @@ public enum AttributeValueType {
 	 * 已方百分比
 	 */
 	@Schema(description = "生产者百分比")
-	OWN_PERCENTAGE,
+	PRODUCER_PERCENTAGE,
 
 	/**
 	 * 作用方百分比
 	 */
 	@Schema(description = "消费者百分比")
-	OTHER_PERCENTAGE
+	CONSUMER_PERCENTAGE
 }

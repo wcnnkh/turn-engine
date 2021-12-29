@@ -1,10 +1,17 @@
 package io.github.wcnnkh.turn.engine.core;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import io.basc.framework.logger.Logger;
+import io.basc.framework.logger.LoggerFactory;
 import lombok.ToString;
 
 /**
@@ -14,16 +21,56 @@ import lombok.ToString;
  *
  */
 @ToString
-public class TurnEngine {
+public class BattleEngine {
+	private static Logger logger = LoggerFactory.getLogger(BattleEngine.class);
+
 	private final Unit[] leftUnits;
 	private final Unit[] rightUnits;
 	private int rounds;
+	private final BattleStrategy strategy;
 
-	public TurnEngine(List<Unit> leftUnits, List<Unit> rightUnits) {
+	public BattleEngine(List<Unit> leftUnits, List<Unit> rightUnits, BattleStrategy strategy) {
 		this.leftUnits = leftUnits == null ? new Unit[0]
 				: leftUnits.stream().map((e) -> e.clone()).toArray(Unit[]::new);
 		this.rightUnits = rightUnits == null ? new Unit[0]
 				: rightUnits.stream().map((e) -> e.clone()).toArray(Unit[]::new);
+		this.strategy = strategy;
+	}
+
+	/**
+	 * 是否全部死亡
+	 * 
+	 * @param units
+	 * @return
+	 */
+	private boolean isDeathAll(Unit[] units) {
+		for (Unit unit : leftUnits) {
+			// 只要有一个没死就没结束
+			if (!strategy.isDeath(unit)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * 获取战斗结果
+	 * 
+	 * @return 1表示右边赢了(左边死完了)， -1表示左边赢了(右边死完了), 0表示还未死完
+	 */
+	public int getResult() {
+		if (isDeathAll(leftUnits)) {
+			// 左边全死了
+			return 1;
+		}
+
+		if (isDeathAll(rightUnits)) {
+			// 右边全死了
+			return -1;
+		}
+
+		// 还没死完
+		return 0;
 	}
 
 	/**
@@ -32,18 +79,7 @@ public class TurnEngine {
 	 * @return
 	 */
 	public boolean isEnd() {
-		for (Unit unit : leftUnits) {
-			if (!unit.isDeath()) {
-				return false;
-			}
-		}
-
-		for (Unit unit : rightUnits) {
-			if (!unit.isDeath()) {
-				return false;
-			}
-		}
-		return true;
+		return getResult() != 0;
 	}
 
 	public int getRounds() {
@@ -57,7 +93,7 @@ public class TurnEngine {
 	 */
 	public List<BattlefieldReport> battle() {
 		if (isEnd()) {
-			throw new TurnEngineException("战斗已结束");
+			throw new EngineException("战斗已结束");
 		}
 
 		List<BattlefieldReport> reports = new ArrayList<BattlefieldReport>();
@@ -106,7 +142,7 @@ public class TurnEngine {
 			}
 
 			// 计算
-			calculation(unit.getAttributes(), buff);
+			calculation(unit, buff);
 			// -1表示永久
 			if (buff.getRounds() > 0) {
 				buff.setRounds(buff.getRounds() - 1);
@@ -122,25 +158,43 @@ public class TurnEngine {
 	 * 计算(将buff作用在实例属性上)<br/>
 	 * 处理任意战斗属性在此方法上扩展
 	 * 
-	 * @param attributes
+	 * @param consumer
 	 * @param buff
 	 */
-	private void calculation(Attributes attributes, Buff buff) {
-		Attributes target = buff.calculation(attributes);
-		if (buff.isDebuff()) {
-			// 伤害
-			// 攻击-防御就是伤害
-			long value = target.getAtt() - attributes.getDef();
-			if (value <= 0) {
-				value = 1;
-			}
-			attributes.setHp(attributes.getHp() - target.getHp());
-			attributes.setHp(attributes.getHp() - value);
-		} else {
-			// 回复
-			attributes.setHp(attributes.getHp() + target.getHp());
-			attributes.setHp(attributes.getHp() + target.getAtt());
+	private void calculation(Unit consumer, Buff buff) {
+		Map<String, BigDecimal> buffAttributes = buff.calculation(consumer);
+		if (logger.isDebugEnabled()) {
+			logger.debug("Consumer[{}], Buff[{}] calculation: {}", consumer, buff, buffAttributes);
 		}
+
+		if (buffAttributes == null || buffAttributes.isEmpty()) {
+			// 没的属性变更
+			return;
+		}
+
+		Map<String, BigDecimal> consumerAttributes = consumer.getAttributes();
+		if (consumerAttributes == null) {
+			// 战斗对象没有属性，可能是已经死了或无用的对象
+			return;
+		}
+
+		BigDecimal target = consumerAttributes.get(buff.getConsumerAttributeName());
+		if (target == null) {
+			target = BigDecimal.ZERO;
+		}
+
+		BigDecimal total = BigDecimal.ZERO;
+		for (Entry<String, BigDecimal> entry : buffAttributes.entrySet()) {
+			total = total.add(entry.getValue());
+		}
+
+		if (total.compareTo(BigDecimal.ZERO) == 0) {
+			// 没有属性变更
+			return;
+		}
+
+		target.subtract(total);
+		consumerAttributes.put(buff.getConsumerAttributeName(), target);
 	}
 
 	/**
@@ -156,7 +210,7 @@ public class TurnEngine {
 				.collect(Collectors.toList());
 		if (actions.isEmpty()) {
 			// 没有可用的技能
-			throw new TurnEngineException("Should never get here");
+			throw new EngineException("Should never get here");
 		}
 
 		// 只有一个行为，直接使用
@@ -184,7 +238,7 @@ public class TurnEngine {
 			}
 		}
 		// 不可能到这里，除非没有技能
-		throw new TurnEngineException("Should never get here");
+		throw new EngineException("Should never get here");
 	}
 
 	/**
@@ -208,11 +262,14 @@ public class TurnEngine {
 		for (Buff buff : action.getBuffs()) {
 			if (buff.isActive()) {
 				for (Unit unit : buff.isDebuff() ? rightUnits : leftUnits) {
-					if (unit.isDeath()) {
+					if (strategy.isDeath(unit)) {
+						// 已经死了，无法施加buff
 						continue;
 					}
 
-					unit.addBuff(new CombatBuff(buff, left));
+					Buff b = buff.clone();
+					b.setProducer(left);
+					unit.addBuff(b);
 					attackers.add(unit);
 
 					if (!action.isAoe()) {
