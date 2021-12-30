@@ -1,15 +1,31 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>io.basc.start</groupId>
-    <artifactId>start</artifactId>
-    <version>1.8.0</version>
-  </parent>
-  <groupId>io.github.wcnnkh</groupId>
-  <artifactId>turn-engine</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <packaging>pom</packaging>
-  <modules>
-  	<module>turn-engine-core</module>
-  </modules>
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>io.basc.start</groupId>
+		<artifactId>start</artifactId>
+		<version>1.8.0</version>
+	</parent>
+	<groupId>io.github.wcnnkh</groupId>
+	<artifactId>turn-engine</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<modules>
+		<module>turn-engine-core</module>
+		<module>turn-engine-simple</module>
+	</modules>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>io.github.wcnnkh</groupId>
+				<artifactId>turn-engine-core</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>io.github.wcnnkh</groupId>
+				<artifactId>turn-engine-simple</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 </project>

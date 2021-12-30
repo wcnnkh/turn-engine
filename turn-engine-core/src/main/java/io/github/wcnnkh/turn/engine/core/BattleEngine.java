@@ -1,17 +1,11 @@
 package io.github.wcnnkh.turn.engine.core;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import io.basc.framework.logger.Logger;
-import io.basc.framework.logger.LoggerFactory;
+import io.basc.framework.util.Assert;
 import lombok.ToString;
 
 /**
@@ -22,14 +16,13 @@ import lombok.ToString;
  */
 @ToString
 public class BattleEngine {
-	private static Logger logger = LoggerFactory.getLogger(BattleEngine.class);
-
 	private final Unit[] leftUnits;
 	private final Unit[] rightUnits;
 	private int rounds;
 	private final BattleStrategy strategy;
 
 	public BattleEngine(List<Unit> leftUnits, List<Unit> rightUnits, BattleStrategy strategy) {
+		Assert.requiredArgument(strategy != null, "strategy");
 		this.leftUnits = leftUnits == null ? new Unit[0]
 				: leftUnits.stream().map((e) -> e.clone()).toArray(Unit[]::new);
 		this.rightUnits = rightUnits == null ? new Unit[0]
@@ -142,7 +135,7 @@ public class BattleEngine {
 			}
 
 			// 计算
-			calculation(unit, buff);
+			strategy.calculation(buff, unit);
 			// -1表示永久
 			if (buff.getRounds() > 0) {
 				buff.setRounds(buff.getRounds() - 1);
@@ -152,49 +145,6 @@ public class BattleEngine {
 				iterator.remove();
 			}
 		}
-	}
-
-	/**
-	 * 计算(将buff作用在实例属性上)<br/>
-	 * 处理任意战斗属性在此方法上扩展
-	 * 
-	 * @param consumer
-	 * @param buff
-	 */
-	private void calculation(Unit consumer, Buff buff) {
-		Map<String, BigDecimal> buffAttributes = buff.calculation(consumer);
-		if (logger.isDebugEnabled()) {
-			logger.debug("Consumer[{}], Buff[{}] calculation: {}", consumer, buff, buffAttributes);
-		}
-
-		if (buffAttributes == null || buffAttributes.isEmpty()) {
-			// 没的属性变更
-			return;
-		}
-
-		Map<String, BigDecimal> consumerAttributes = consumer.getAttributes();
-		if (consumerAttributes == null) {
-			// 战斗对象没有属性，可能是已经死了或无用的对象
-			return;
-		}
-
-		BigDecimal target = consumerAttributes.get(buff.getConsumerAttributeName());
-		if (target == null) {
-			target = BigDecimal.ZERO;
-		}
-
-		BigDecimal total = BigDecimal.ZERO;
-		for (Entry<String, BigDecimal> entry : buffAttributes.entrySet()) {
-			total = total.add(entry.getValue());
-		}
-
-		if (total.compareTo(BigDecimal.ZERO) == 0) {
-			// 没有属性变更
-			return;
-		}
-
-		target.subtract(total);
-		consumerAttributes.put(buff.getConsumerAttributeName(), target);
 	}
 
 	/**

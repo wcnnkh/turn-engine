@@ -28,7 +28,7 @@ public class Buff implements Serializable, Cloneable {
 	@Schema(description = "属性值类型")
 	private AttributeValueType attributeValueType;
 	@Schema(description = "这个buff作用到的属性名称")
-	private String consumerAttributeName;
+	private String attributeName;
 	@Schema(description = "持续多少个回合，-1表示永久")
 	private long rounds;
 	@Schema(description = "是否是debuff")

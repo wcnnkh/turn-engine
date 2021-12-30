@@ -7,7 +7,19 @@ package io.github.wcnnkh.turn.engine.core;
  *
  */
 public interface BattleStrategy {
+	/**
+	 * 这个单位是否已死亡
+	 * 
+	 * @param unit
+	 * @return
+	 */
 	boolean isDeath(Unit unit);
 
-	void calculation(Unit source, Unit target, Buff buff);
+	/**
+	 * 将buff作用在目标身上
+	 * 
+	 * @param buff
+	 * @param target
+	 */
+	void calculation(Buff buff, Unit targetUnit);
 }
