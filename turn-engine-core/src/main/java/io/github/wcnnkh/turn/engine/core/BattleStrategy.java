@@ -16,10 +16,11 @@ public interface BattleStrategy {
 	boolean isDeath(Unit unit);
 
 	/**
-	 * 将buff作用在目标身上
+	 * 计算战斗
 	 * 
-	 * @param buff
-	 * @param target
+	 * @param battle
+	 * @param targetUnit
+	 * @return
 	 */
-	void calculation(Buff buff, Unit targetUnit);
+	BattleReport calculation(Battle battle, BattleUnit targetUnit);
 }

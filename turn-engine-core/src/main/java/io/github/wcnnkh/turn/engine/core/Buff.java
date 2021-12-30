@@ -4,11 +4,11 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import io.basc.framework.lang.Nullable;
-import io.basc.framework.util.CollectionFactory;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,21 +33,17 @@ public class Buff implements Serializable, Cloneable {
 	private long rounds;
 	@Schema(description = "是否是debuff")
 	private boolean debuff;
-	@Schema(description = "buff的生产者")
 
 	/**
 	 * 这个buff的施放者，buff类型为施放者的百分比时不能为空
 	 */
 	@Nullable
+	@Schema(description = "buff的生产者")
 	private Unit producer;
 
-	public Buff(Buff buff) {
-		this.id = buff.id;
-		this.attributes = buff.attributes;
-		this.attributeValueType = buff.attributeValueType;
-		this.rounds = buff.rounds;
-		this.debuff = buff.debuff;
-	}
+	@Nullable
+	@Schema(description = "产生此buff的行为")
+	private Action action;
 
 	@Override
 	public Buff clone() {
@@ -55,8 +51,10 @@ public class Buff implements Serializable, Cloneable {
 		buff.id = this.id;
 		buff.rounds = this.rounds;
 		buff.attributeValueType = this.attributeValueType;
-		buff.attributes = this.attributes == null ? null : CollectionFactory.clone(this.attributes);
+		buff.attributes = this.attributes == null ? null : new LinkedHashMap<String, BigDecimal>(this.attributes);
 		buff.debuff = this.debuff;
+		//buff.producer = this.producer == null ? null : this.producer.clone();
+		//buff.action = this.action == null ? null : this.action.clone();
 		return buff;
 	}
 

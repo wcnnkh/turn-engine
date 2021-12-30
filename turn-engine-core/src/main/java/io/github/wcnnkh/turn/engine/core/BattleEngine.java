@@ -1,6 +1,7 @@
 package io.github.wcnnkh.turn.engine.core;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,22 +12,22 @@ import lombok.ToString;
 /**
  * 回合制战斗引擎
  * 
- * @author shuchaowen
+ * @author wcnnkh
  *
  */
 @ToString
 public class BattleEngine {
-	private final Unit[] leftUnits;
-	private final Unit[] rightUnits;
+	private final BattleUnit[] leftUnits;
+	private final BattleUnit[] rightUnits;
 	private int rounds;
 	private final BattleStrategy strategy;
 
 	public BattleEngine(List<Unit> leftUnits, List<Unit> rightUnits, BattleStrategy strategy) {
 		Assert.requiredArgument(strategy != null, "strategy");
-		this.leftUnits = leftUnits == null ? new Unit[0]
-				: leftUnits.stream().map((e) -> e.clone()).toArray(Unit[]::new);
-		this.rightUnits = rightUnits == null ? new Unit[0]
-				: rightUnits.stream().map((e) -> e.clone()).toArray(Unit[]::new);
+		this.leftUnits = leftUnits == null ? new BattleUnit[0]
+				: leftUnits.stream().map((e) -> new BattleUnit(e, null)).toArray(BattleUnit[]::new);
+		this.rightUnits = rightUnits == null ? new BattleUnit[0]
+				: rightUnits.stream().map((e) -> new BattleUnit(e, null)).toArray(BattleUnit[]::new);
 		this.strategy = strategy;
 	}
 
@@ -36,10 +37,10 @@ public class BattleEngine {
 	 * @param units
 	 * @return
 	 */
-	private boolean isDeathAll(Unit[] units) {
-		for (Unit unit : leftUnits) {
+	private boolean isDeathAll(BattleUnit[] units) {
+		for (BattleUnit unit : leftUnits) {
 			// 只要有一个没死就没结束
-			if (!strategy.isDeath(unit)) {
+			if (!strategy.isDeath(unit.getUnit())) {
 				return false;
 			}
 		}
@@ -84,37 +85,37 @@ public class BattleEngine {
 	 * 
 	 * @return
 	 */
-	public List<BattlefieldReport> battle() {
+	public List<BattleReport> battle() {
 		if (isEnd()) {
 			throw new EngineException("战斗已结束");
 		}
 
-		List<BattlefieldReport> reports = new ArrayList<BattlefieldReport>();
 		// 左边打右边
-		for (Unit left : this.leftUnits) {
-			reports.add(battle(left, this.leftUnits, this.rightUnits));
+		for (BattleUnit left : this.leftUnits) {
+			battle(left, this.leftUnits, this.rightUnits);
 			if (isEnd()) {
 				break;
 			}
 		}
 
 		// 右边打左边
-		for (Unit right : this.rightUnits) {
-			reports.add(battle(right, this.rightUnits, this.leftUnits));
+		for (BattleUnit right : this.rightUnits) {
+			battle(right, this.rightUnits, this.leftUnits);
 			if (isEnd()) {
 				break;
 			}
 		}
 
-		for (Unit unit : this.leftUnits) {
-			nextRound(unit);
+		List<BattleReport> reports = new ArrayList<BattleReport>();
+		for (BattleUnit unit : this.leftUnits) {
+			nextRound(reports, unit);
 		}
 
-		for (Unit unit : this.rightUnits) {
-			nextRound(unit);
+		for (BattleUnit unit : this.rightUnits) {
+			nextRound(reports, unit);
 		}
 		this.rounds++;
-		return reports.stream().map((e) -> e.clone()).collect(Collectors.toList());
+		return reports;
 	}
 
 	/**
@@ -122,20 +123,24 @@ public class BattleEngine {
 	 * 
 	 * @param unit
 	 */
-	private void nextRound(Unit unit) {
-		if (unit.getBuffs() == null) {
+	private void nextRound(Collection<BattleReport> reports, BattleUnit unit) {
+		if (unit.getBattles() == null) {
 			return;
 		}
-		Iterator<Buff> iterator = unit.getBuffs().iterator();
+		Iterator<Battle> iterator = unit.getBattles().iterator();
 		while (iterator.hasNext()) {
-			Buff buff = iterator.next();
+			Battle buff = iterator.next();
 			if (!buff.isActive()) {
 				iterator.remove();
 				continue;
 			}
 
 			// 计算
-			strategy.calculation(buff, unit);
+			BattleReport report = strategy.calculation(buff, unit);
+			if (report != null && buff.isActive()) {
+				reports.add(report.clone());
+			}
+
 			// -1表示永久
 			if (buff.getRounds() > 0) {
 				buff.setRounds(buff.getRounds() - 1);
@@ -199,7 +204,7 @@ public class BattleEngine {
 	 * @param rightUnits 敌军
 	 * @return
 	 */
-	private BattlefieldReport battle(Unit left, Unit[] leftUnits, Unit[] rightUnits) {
+	private void battle(Unit left, Unit[] leftUnits, Unit[] rightUnits) {
 		// 选择一个行为
 		Action action = getActions(left, leftUnits, rightUnits);
 		left.getActions().forEach((e) -> {
@@ -208,7 +213,6 @@ public class BattleEngine {
 			}
 		});
 
-		List<Unit> attackers = new ArrayList<Unit>();
 		for (Buff buff : action.getBuffs()) {
 			if (buff.isActive()) {
 				for (Unit unit : buff.isDebuff() ? rightUnits : leftUnits) {
@@ -219,21 +223,13 @@ public class BattleEngine {
 
 					Buff b = buff.clone();
 					b.setProducer(left);
+					b.setAction(action);
 					unit.addBuff(b);
-					attackers.add(unit);
-
 					if (!action.isAoe()) {
 						break;
 					}
 				}
 			}
 		}
-
-		BattlefieldReport report = new BattlefieldReport();
-		report.setLeftUnit(left);
-		report.setRightUnits(attackers);
-		report.setAction(action);
-		report.setRounds(this.rounds);
-		return report;
 	}
 }

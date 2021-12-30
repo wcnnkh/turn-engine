@@ -1,14 +1,15 @@
 package io.github.wcnnkh.turn.engine.core;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import io.basc.framework.logger.Logger;
 import io.basc.framework.logger.LoggerFactory;
 import io.basc.framework.util.Assert;
 import io.basc.framework.util.CollectionUtils;
 import io.basc.framework.util.StringUtils;
-import io.basc.framework.logger.Logger;
 
 /**
  * 简单的战斗策略
@@ -54,7 +55,7 @@ public class SimpleBattleStrategy implements BattleStrategy {
 	 * buff计算
 	 */
 	@Override
-	public void calculation(Buff buff, Unit targetUnit) {
+	public BattleReport calculation(Buff buff, Unit targetUnit) {
 		Map<String, BigDecimal> buffAttributes = buff.calculation(targetUnit);
 		if (logger.isDebugEnabled()) {
 			logger.debug("Consumer[{}], Buff[{}] calculation: {}", targetUnit, buff, buffAttributes);
@@ -62,7 +63,7 @@ public class SimpleBattleStrategy implements BattleStrategy {
 
 		if (buffAttributes == null || buffAttributes.isEmpty()) {
 			// 没的属性变更
-			return;
+			return null;
 		}
 
 		BigDecimal total = BigDecimal.ZERO;
@@ -72,10 +73,11 @@ public class SimpleBattleStrategy implements BattleStrategy {
 
 		if (total.compareTo(BigDecimal.ZERO) == 0) {
 			// 没有属性变更
-			return;
+			return null;
 		}
 
-		attributeCalculation(buff, targetUnit, total);
+		Map<String, BigDecimal> changeAttributes = attributeCalculation(buff, targetUnit, total);
+		return new BattleReport(buff, targetUnit, changeAttributes);
 	}
 
 	/**
@@ -85,24 +87,25 @@ public class SimpleBattleStrategy implements BattleStrategy {
 	 * @param targetUnit
 	 * @param attributeValue
 	 */
-	protected void attributeCalculation(Buff buff, Unit targetUnit, BigDecimal attributeValue) {
+	protected Map<String, BigDecimal> attributeCalculation(Buff buff, Unit targetUnit, BigDecimal attributeValue) {
 		Map<String, BigDecimal> consumerAttributes = targetUnit.getAttributes();
 		if (consumerAttributes == null) {
 			// 战斗对象没有属性，可能是已经死了或无用的对象
-			return;
+			return null;
 		}
 
 		if (buff.isDebuff()) {
 			// 如果是伤害
 			BigDecimal hp = consumerAttributes.get(hpAttributeName);
 			if (hp == null) {
-				return;
+				return null;
 			}
 
+			BigDecimal changeHp;
 			String defenseAttributeName = attackToDefenseAttributeNameMap.get(buff.getAttributeName());
 			if (defenseAttributeName == null) {
 				// 找不到伤害对应的防御属性直接扣除
-				hp = hp.subtract(attributeValue);
+				changeHp = attributeValue;
 			} else {
 				BigDecimal defense = consumerAttributes.get(defenseAttributeName);
 				if (defense == null) {
@@ -110,9 +113,11 @@ public class SimpleBattleStrategy implements BattleStrategy {
 				}
 
 				// 简单的进行攻击和防御的换算
-				hp = hp.subtract(attributeValue.subtract(defense).abs().max(BigDecimal.ONE));
+				changeHp = attributeValue.subtract(defense).abs().max(BigDecimal.ONE);
 			}
-			consumerAttributes.put(hpAttributeName, hp);
+			changeHp = changeHp.negate();
+			consumerAttributes.put(hpAttributeName, hp.add(changeHp));
+			return Collections.singletonMap(hpAttributeName, changeHp);
 		} else {
 			// 如果是增益直接修改对应属性
 			BigDecimal value = consumerAttributes.get(buff.getAttributeName());
@@ -122,6 +127,7 @@ public class SimpleBattleStrategy implements BattleStrategy {
 
 			value = value.add(attributeValue);
 			consumerAttributes.put(buff.getAttributeName(), value);
+			return Collections.singletonMap(buff.getAttributeName(), attributeValue);
 		}
 	}
 }
