@@ -15,13 +15,11 @@ import lombok.NoArgsConstructor;
 public class BattleReport implements Serializable, Cloneable {
 	private static final long serialVersionUID = 1L;
 	private Battle battle;
-	private Unit consumer;
 	private Map<String, BigDecimal> changeAttributes;
 
 	@Override
 	public BattleReport clone() {
 		return new BattleReport(this.battle == null ? null : battle.clone(),
-				this.consumer == null ? null : this.consumer.clone(),
 				this.changeAttributes == null ? null : CollectionFactory.clone(this.changeAttributes));
 	}
 

@@ -13,12 +13,15 @@ public class Battle implements Serializable, Cloneable {
 	private static final long serialVersionUID = 1L;
 	private Unit producer;
 	private Action action;
+	private Unit consumer;
 	private Buff buff;
+	private int rounds;
 
 	@Override
 	public Battle clone() {
 		return new Battle(this.producer == null ? null : this.producer.clone(),
-				this.action == null ? null : this.action.clone(), this.buff == null ? null : this.buff.clone());
+				this.action == null ? null : this.action.clone(), this.consumer == null ? null : this.consumer.clone(),
+				this.buff == null ? null : this.buff.clone(), this.rounds);
 	}
 
 	public boolean isActive() {
