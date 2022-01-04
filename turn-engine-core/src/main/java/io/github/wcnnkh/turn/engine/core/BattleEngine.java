@@ -21,13 +21,19 @@ public class BattleEngine {
 	private final BattleUnit[] rightUnits;
 	private int rounds;
 	private final BattleStrategy strategy;
+	private int index;
+	/**
+	 * 战斗的最大轮次
+	 */
+	private final int maxRounds;
 
-	public BattleEngine(List<Unit> leftUnits, List<Unit> rightUnits, BattleStrategy strategy) {
+	public BattleEngine(List<Unit> leftUnits, List<Unit> rightUnits, int maxRounds, BattleStrategy strategy) {
 		Assert.requiredArgument(strategy != null, "strategy");
 		this.leftUnits = leftUnits == null ? new BattleUnit[0]
 				: leftUnits.stream().map((e) -> new BattleUnit(e, null)).toArray(BattleUnit[]::new);
 		this.rightUnits = rightUnits == null ? new BattleUnit[0]
 				: rightUnits.stream().map((e) -> new BattleUnit(e, null)).toArray(BattleUnit[]::new);
+		this.maxRounds = maxRounds;
 		this.strategy = strategy;
 	}
 
@@ -73,6 +79,10 @@ public class BattleEngine {
 	 * @return
 	 */
 	public boolean isEnd() {
+		if (this.rounds > maxRounds) {
+			return true;
+		}
+
 		return getResult() != 0;
 	}
 
@@ -91,7 +101,9 @@ public class BattleEngine {
 		}
 
 		// 左边打右边
+		index = 0;
 		for (BattleUnit left : this.leftUnits) {
+			index++;
 			battle(left, this.leftUnits, this.rightUnits);
 			if (isEnd()) {
 				break;
@@ -100,6 +112,7 @@ public class BattleEngine {
 
 		// 右边打左边
 		for (BattleUnit right : this.rightUnits) {
+			index++;
 			battle(right, this.rightUnits, this.leftUnits);
 			if (isEnd()) {
 				break;
@@ -129,24 +142,24 @@ public class BattleEngine {
 		}
 		Iterator<Battle> iterator = unit.getBattles().iterator();
 		while (iterator.hasNext()) {
-			Battle buff = iterator.next();
-			if (!buff.isActive()) {
+			Battle battle = iterator.next();
+			if (!battle.isActive()) {
 				iterator.remove();
 				continue;
 			}
 
 			// 计算
-			BattleReport report = strategy.calculation(buff, unit);
-			if (report != null && buff.isActive()) {
+			BattleReport report = strategy.calculation(battle);
+			if (report != null && report.isActive()) {
 				reports.add(report.clone());
 			}
 
 			// -1表示永久
-			if (buff.getRounds() > 0) {
-				buff.setRounds(buff.getRounds() - 1);
+			if (battle.getBuff().getRounds() > 0) {
+				battle.getBuff().setRounds(battle.getBuff().getRounds() - 1);
 			}
 
-			if (!buff.isActive()) {
+			if (!battle.isActive()) {
 				iterator.remove();
 			}
 		}
@@ -160,8 +173,8 @@ public class BattleEngine {
 	 * @param rightUnits
 	 * @return
 	 */
-	private Action getActions(Unit left, Unit[] leftUntis, Unit[] rightUnits) {
-		List<Action> actions = left.getActions().stream().filter((e) -> e.getAnger() >= e.getMaxAnger())
+	private Action getActions(BattleUnit left, BattleUnit[] leftUntis, BattleUnit[] rightUnits) {
+		List<Action> actions = left.getUnit().getActions().stream().filter((e) -> e.getAnger() >= e.getMaxAnger())
 				.collect(Collectors.toList());
 		if (actions.isEmpty()) {
 			// 没有可用的技能
@@ -204,10 +217,10 @@ public class BattleEngine {
 	 * @param rightUnits 敌军
 	 * @return
 	 */
-	private void battle(Unit left, Unit[] leftUnits, Unit[] rightUnits) {
+	private void battle(BattleUnit left, BattleUnit[] leftUnits, BattleUnit[] rightUnits) {
 		// 选择一个行为
 		Action action = getActions(left, leftUnits, rightUnits);
-		left.getActions().forEach((e) -> {
+		left.getUnit().getActions().forEach((e) -> {
 			if (e.getAnger() < e.getMaxAnger()) {
 				e.setAnger(e.getAnger() + e.getAngerIncrease());
 			}
@@ -215,21 +228,20 @@ public class BattleEngine {
 
 		for (Buff buff : action.getBuffs()) {
 			if (buff.isActive()) {
-				for (Unit unit : buff.isDebuff() ? rightUnits : leftUnits) {
-					if (strategy.isDeath(unit)) {
+				for (BattleUnit unit : buff.isDebuff() ? rightUnits : leftUnits) {
+					if (strategy.isDeath(unit.getUnit())) {
 						// 已经死了，无法施加buff
 						continue;
 					}
 
-					Buff b = buff.clone();
-					b.setProducer(left);
-					b.setAction(action);
-					unit.addBuff(b);
+					Battle battle = new Battle(this.rounds, this.index, left.getUnit(), action, unit.getUnit(), buff);
+					unit.addBattle(battle);
 					if (!action.isAoe()) {
 						break;
 					}
 				}
 			}
 		}
+		index++;
 	}
 }

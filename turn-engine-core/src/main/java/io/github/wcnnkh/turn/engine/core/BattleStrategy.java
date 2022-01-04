@@ -22,5 +22,5 @@ public interface BattleStrategy {
 	 * @param targetUnit
 	 * @return
 	 */
-	BattleReport calculation(Battle battle, BattleUnit targetUnit);
+	BattleReport calculation(Battle battle);
 }

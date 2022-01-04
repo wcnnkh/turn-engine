@@ -55,10 +55,10 @@ public class SimpleBattleStrategy implements BattleStrategy {
 	 * buff计算
 	 */
 	@Override
-	public BattleReport calculation(Buff buff, Unit targetUnit) {
-		Map<String, BigDecimal> buffAttributes = buff.calculation(targetUnit);
+	public BattleReport calculation(Battle battle) {
+		Map<String, BigDecimal> buffAttributes = battle.calculation();
 		if (logger.isDebugEnabled()) {
-			logger.debug("Consumer[{}], Buff[{}] calculation: {}", targetUnit, buff, buffAttributes);
+			logger.debug("{} calculation: {}", battle, buffAttributes);
 		}
 
 		if (buffAttributes == null || buffAttributes.isEmpty()) {
@@ -76,8 +76,8 @@ public class SimpleBattleStrategy implements BattleStrategy {
 			return null;
 		}
 
-		Map<String, BigDecimal> changeAttributes = attributeCalculation(buff, targetUnit, total);
-		return new BattleReport(buff, targetUnit, changeAttributes);
+		Map<String, BigDecimal> changeAttributes = attributeCalculation(battle.getBuff(), battle.getConsumer(), total);
+		return new BattleReport(battle, changeAttributes);
 	}
 
 	/**

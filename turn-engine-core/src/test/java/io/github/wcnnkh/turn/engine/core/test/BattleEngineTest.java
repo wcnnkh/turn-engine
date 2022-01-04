@@ -36,8 +36,8 @@ public class BattleEngineTest {
 
 		Action action = new Action();
 		action.setId("普攻");
-		action.setBuffs(Arrays.asList(new Buff("普攻伤害", createAttributes("0", "20", "0"), AttributeValueType.VALUE,
-				"att", 1, true, null, null)));
+		action.setBuffs(Arrays
+				.asList(new Buff("普攻伤害", createAttributes("0", "20", "0"), AttributeValueType.VALUE, "att", 1, true)));
 		unit.setActions(Arrays.asList(action));
 		return unit;
 	}
@@ -57,7 +57,7 @@ public class BattleEngineTest {
 	public void test() {
 		SimpleBattleStrategy strategy = new SimpleBattleStrategy("hp", Collections.singletonMap("att", "def"));
 		BattleEngine turnEngine = new BattleEngine(Arrays.asList(getUnit("左1"), getUnit("左2")),
-				Arrays.asList(getUnit("右1"), getUnit("右2")), strategy);
+				Arrays.asList(getUnit("右1"), getUnit("右2")), 10, strategy);
 
 		StopWatch stopWatch = new StopWatch("回合制战斗");
 		while (!turnEngine.isEnd()) {

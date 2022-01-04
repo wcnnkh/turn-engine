@@ -15,14 +15,14 @@ import lombok.NoArgsConstructor;
 public class BattleUnit implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private Unit unit;
-	@Schema(description = "身上剩余的buffs")
+	@Schema(description = "身上剩余的战斗")
 	private List<Battle> battles;
 
-	public void addBuff(Battle buff) {
+	public void addBattle(Battle battle) {
 		// 会频繁操作，使用使用linked
 		if (battles == null) {
 			battles = new LinkedList<>();
 		}
-		battles.add(buff);
+		battles.add(battle);
 	}
 }

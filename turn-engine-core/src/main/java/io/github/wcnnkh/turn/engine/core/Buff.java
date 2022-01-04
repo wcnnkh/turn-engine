@@ -8,7 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import io.basc.framework.lang.Nullable;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,17 +33,6 @@ public class Buff implements Serializable, Cloneable {
 	@Schema(description = "是否是debuff")
 	private boolean debuff;
 
-	/**
-	 * 这个buff的施放者，buff类型为施放者的百分比时不能为空
-	 */
-	@Nullable
-	@Schema(description = "buff的生产者")
-	private Unit producer;
-
-	@Nullable
-	@Schema(description = "产生此buff的行为")
-	private Action action;
-
 	@Override
 	public Buff clone() {
 		Buff buff = new Buff();
@@ -53,8 +41,6 @@ public class Buff implements Serializable, Cloneable {
 		buff.attributeValueType = this.attributeValueType;
 		buff.attributes = this.attributes == null ? null : new LinkedHashMap<String, BigDecimal>(this.attributes);
 		buff.debuff = this.debuff;
-		//buff.producer = this.producer == null ? null : this.producer.clone();
-		//buff.action = this.action == null ? null : this.action.clone();
 		return buff;
 	}
 
@@ -80,7 +66,7 @@ public class Buff implements Serializable, Cloneable {
 		return false;
 	}
 
-	private Map<String, BigDecimal> calculationPercentage(Map<String, BigDecimal> sourceAttributes) {
+	public Map<String, BigDecimal> calculationPercentage(Map<String, BigDecimal> sourceAttributes) {
 		if (sourceAttributes == null || sourceAttributes.isEmpty()) {
 			return Collections.emptyMap();
 		}
@@ -95,33 +81,5 @@ public class Buff implements Serializable, Cloneable {
 			attributes.put(entry.getKey(), source.multiply(entry.getValue()));
 		}
 		return attributes;
-	}
-
-	/**
-	 * 计算buff的实际属性
-	 * 
-	 * @param consumer
-	 * @return
-	 */
-	public Map<String, BigDecimal> calculation(Unit consumer) {
-		if (this.attributes == null || this.attributes.isEmpty()) {
-			return Collections.emptyMap();
-		}
-
-		switch (attributeValueType) {
-		case VALUE:
-			return new HashMap<String, BigDecimal>(this.attributes);
-		case CONSUMER_PERCENTAGE:
-			return calculationPercentage(consumer.getAttributes());
-		case PRODUCER_PERCENTAGE:
-			if (producer == null) {
-				// 属性值类型人
-				throw new EngineException("Attribute value type is OWN_PERCENTAGE for producer cannot be empty");
-			}
-			return calculationPercentage(producer.getAttributes());
-		default:
-			break;
-		}
-		throw new EngineException("Unsupported attribute value type: " + attributeValueType);
 	}
 }
