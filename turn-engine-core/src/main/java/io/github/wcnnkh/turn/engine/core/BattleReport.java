@@ -2,9 +2,9 @@ package io.github.wcnnkh.turn.engine.core;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-import io.basc.framework.util.CollectionFactory;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,7 +20,7 @@ public class BattleReport implements Serializable, Cloneable {
 	@Override
 	public BattleReport clone() {
 		return new BattleReport(this.battle == null ? null : battle.clone(),
-				this.changeAttributes == null ? null : CollectionFactory.clone(this.changeAttributes));
+				this.changeAttributes == null ? null : new LinkedHashMap<String, BigDecimal>(changeAttributes));
 	}
 
 	/**

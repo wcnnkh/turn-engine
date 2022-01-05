@@ -21,7 +21,7 @@ public class BattleEngine {
 	private final BattleUnit[] rightUnits;
 	private int rounds;
 	private final BattleStrategy strategy;
-	private int index;
+	private int order;
 	/**
 	 * 战斗的最大轮次
 	 */
@@ -101,9 +101,9 @@ public class BattleEngine {
 		}
 
 		// 左边打右边
-		index = 0;
+		order = 0;
 		for (BattleUnit left : this.leftUnits) {
-			index++;
+			order++;
 			battle(left, this.leftUnits, this.rightUnits);
 			if (isEnd()) {
 				break;
@@ -112,7 +112,7 @@ public class BattleEngine {
 
 		// 右边打左边
 		for (BattleUnit right : this.rightUnits) {
-			index++;
+			order++;
 			battle(right, this.rightUnits, this.leftUnits);
 			if (isEnd()) {
 				break;
@@ -234,7 +234,7 @@ public class BattleEngine {
 						continue;
 					}
 
-					Battle battle = new Battle(this.rounds, this.index, left.getUnit(), action, unit.getUnit(), buff);
+					Battle battle = new Battle(this.rounds, this.order, left.getUnit(), action, unit.getUnit(), buff.clone());
 					unit.addBattle(battle);
 					if (!action.isAoe()) {
 						break;
@@ -242,6 +242,5 @@ public class BattleEngine {
 				}
 			}
 		}
-		index++;
 	}
 }

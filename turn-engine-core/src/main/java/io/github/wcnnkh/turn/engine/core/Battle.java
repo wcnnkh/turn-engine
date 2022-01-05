@@ -18,8 +18,8 @@ public class Battle implements Serializable, Cloneable {
 	private static final long serialVersionUID = 1L;
 	@Schema(description = "战斗发生的轮次")
 	private int rounds;
-	@Schema(description = "战斗发生的索引, rounds和index相同时视为同一次战斗")
-	private int index;
+	@Schema(description = "战斗发生的顺序, rounds和order相同时视为同一次战斗")
+	private int order;
 	private Unit producer;
 	private Action action;
 	private Unit consumer;
@@ -27,7 +27,7 @@ public class Battle implements Serializable, Cloneable {
 
 	@Override
 	public Battle clone() {
-		return new Battle(this.rounds, this.index, this.producer == null ? null : this.producer.clone(),
+		return new Battle(this.rounds, this.order, this.producer == null ? null : this.producer.clone(),
 				this.action == null ? null : this.action.clone(), this.consumer == null ? null : this.consumer.clone(),
 				this.buff == null ? null : this.buff.clone());
 	}

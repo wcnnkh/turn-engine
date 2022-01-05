@@ -20,9 +20,9 @@ public class BattleUnit implements Serializable {
 
 	public void addBattle(Battle battle) {
 		// 会频繁操作，使用使用linked
-		if (battles == null) {
-			battles = new LinkedList<>();
+		if (this.battles == null) {
+			this.battles = new LinkedList<>();
 		}
-		battles.add(battle);
+		this.battles.add(battle);
 	}
 }
