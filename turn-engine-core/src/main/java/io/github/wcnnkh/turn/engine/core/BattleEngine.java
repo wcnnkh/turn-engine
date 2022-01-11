@@ -195,12 +195,12 @@ public class BattleEngine {
 		}
 
 		// 是否应该使用科学计算？
-		long randomWeight = (long) (Math.random() * (totalWeight - 1));
+		long randomWeight = (long) (Math.random() * totalWeight);
 		long weight = 0;
 		for (Action action : actions) {
 			weight += action.getWeight();
 			// 如果随机的权重在这个范围内
-			if (randomWeight <= weight) {
+			if (weight >= randomWeight) {
 				action.setAnger(0);
 				return action;
 			}
