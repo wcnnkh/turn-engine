@@ -36,6 +36,7 @@ public class BattleEngineTest {
 
 		Action action = new Action();
 		action.setId("普攻");
+		action.setWeight(1);
 		action.setBuffs(Arrays
 				.asList(new Buff("普攻伤害", createAttributes("0", "20", "0"), AttributeValueType.VALUE, "att", 1, true)));
 		unit.setActions(Arrays.asList(action));

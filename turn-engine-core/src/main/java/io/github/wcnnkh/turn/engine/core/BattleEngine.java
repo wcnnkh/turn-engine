@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import io.basc.framework.util.Assert;
+import io.basc.framework.util.RandomUtils;
 import lombok.ToString;
 
 /**
@@ -180,33 +181,15 @@ public class BattleEngine {
 			// 没有可用的技能
 			throw new EngineException("Should never get here");
 		}
-
-		// 只有一个行为，直接使用
-		if (actions.size() == 1) {
-			Action action = actions.get(0);
-			action.setAnger(0);
-			return action;
+		
+		Action action = RandomUtils.random(actions, (e) -> e.getWeight(), null);
+		if(action == null) {
+			// 不可能到这里，除非没有技能
+			throw new EngineException("Should never get here");
 		}
-
-		long totalWeight = 0;
-		for (Action action : actions) {
-			// 可以使用
-			totalWeight += action.getWeight();
-		}
-
-		// 是否应该使用科学计算？
-		long randomWeight = (long) (Math.random() * totalWeight);
-		long weight = 0;
-		for (Action action : actions) {
-			weight += action.getWeight();
-			// 如果随机的权重在这个范围内
-			if (weight >= randomWeight) {
-				action.setAnger(0);
-				return action;
-			}
-		}
-		// 不可能到这里，除非没有技能
-		throw new EngineException("Should never get here");
+		
+		action.setAnger(0);
+		return action;
 	}
 
 	/**
