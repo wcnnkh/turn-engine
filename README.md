@@ -3,16 +3,7 @@
 
 # 1. pom.xml中引入仓库
 -------------------
-	<repositories>
-		  <repository>
-			  <id>wcnnkh</id>
-			  <name>wcnnkh</name>
-			  <url>http://basc.io</url>
-		  </repository>
-    </repositories>
-或下载源码打包(自己打包需要先打包父项目
-1. [https://github.com/wcnnkh/framework](https://github.com/wcnnkh/framework))
-2. [https://github.com/wcnnkh/start](https://github.com/wcnnkh/start))
+https://github.com/wcnnkh/start#1pomxml%E4%B8%AD%E5%BC%95%E5%85%A5%E4%BB%93%E5%BA%93
 
 # 2. 示例
 [BattleEngineTest](https://github.com/wcnnkh/turn-engine/blob/master/turn-engine-core/src/test/java/io/github/wcnnkh/turn/engine/core/test/BattleEngineTest.java)  简单的测试类
