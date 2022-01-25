@@ -15,7 +15,7 @@
 2. [https://github.com/wcnnkh/start](https://github.com/wcnnkh/start))
 
 # 2. 示例
-io.github.wcnnkh.turn.engine.core.test.BattleEngineTest  简单的测试类
+[BattleEngineTest](https://github.com/wcnnkh/turn-engine/blob/master/turn-engine-core/src/test/java/io/github/wcnnkh/turn/engine/core/test/BattleEngineTest.java)  简单的测试类
 
 
 # 3. TODO
