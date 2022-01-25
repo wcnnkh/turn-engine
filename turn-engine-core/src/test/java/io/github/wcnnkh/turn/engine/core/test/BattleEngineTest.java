@@ -61,6 +61,7 @@ public class BattleEngineTest {
 				Arrays.asList(getUnit("右1"), getUnit("右2")), 10, strategy);
 
 		StopWatch stopWatch = new StopWatch("回合制战斗");
+		long t = System.currentTimeMillis();
 		while (!turnEngine.isEnd()) {
 			stopWatch.start("第" + turnEngine.getRounds() + "轮战斗");
 			List<BattleReport> reports = turnEngine.battle();
@@ -68,7 +69,7 @@ public class BattleEngineTest {
 			logger.info("第{}轮战斗，战报：{}", turnEngine.getRounds() - 1, reports);
 			stopWatch.stop();
 		}
-		logger.info("战斗结束：{}", stopWatch);
+		logger.info("用时{}ms, 战斗结束：{}", (System.currentTimeMillis() - t), stopWatch);
 	}
 
 }

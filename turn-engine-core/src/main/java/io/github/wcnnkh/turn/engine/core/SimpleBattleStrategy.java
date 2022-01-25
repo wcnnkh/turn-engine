@@ -29,6 +29,10 @@ public class SimpleBattleStrategy implements BattleStrategy {
 	 */
 	private final Map<String, String> attackToDefenseAttributeNameMap;
 
+	/**
+	 * @param hpAttributeName                 生命属性名称
+	 * @param attackToDefenseAttributeNameMap 攻击和防御的映射
+	 */
 	public SimpleBattleStrategy(String hpAttributeName, Map<String, String> attackToDefenseAttributeNameMap) {
 		Assert.requiredArgument(StringUtils.hasText(hpAttributeName), "hpAttributeName");
 		Assert.requiredArgument(!CollectionUtils.isEmpty(attackToDefenseAttributeNameMap),
@@ -116,7 +120,7 @@ public class SimpleBattleStrategy implements BattleStrategy {
 				changeHp = attributeValue.subtract(defense).abs().max(BigDecimal.ONE);
 			}
 			changeHp = changeHp.negate();
-			consumerAttributes.put(hpAttributeName, hp.add(changeHp));
+			consumerAttributes.put(hpAttributeName, hp.add(changeHp).max(BigDecimal.ZERO));
 			return Collections.singletonMap(hpAttributeName, changeHp);
 		} else {
 			// 如果是增益直接修改对应属性
