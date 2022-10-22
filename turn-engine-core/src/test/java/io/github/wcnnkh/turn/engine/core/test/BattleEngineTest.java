@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import io.basc.framework.json.JSONUtils;
+import io.basc.framework.json.JsonUtils;
 import io.basc.framework.logger.Logger;
 import io.basc.framework.logger.LoggerFactory;
 import io.basc.framework.util.StopWatch;
@@ -66,7 +66,7 @@ public class BattleEngineTest {
 			stopWatch.start("第" + turnEngine.getRounds() + "轮战斗");
 			List<BattleReport> reports = turnEngine.battle();
 			stopWatch.stop();
-			logger.info("第{}轮战斗，战报：{}", turnEngine.getRounds() - 1, JSONUtils.getJsonSupport().toJSONString(reports));
+			logger.info("第{}轮战斗，战报：{}", turnEngine.getRounds() - 1, JsonUtils.getJsonSupport().toJsonString(reports));
 		}
 		logger.info("用时{}ms, 战斗结束：{}", (System.currentTimeMillis() - t), stopWatch);
 	}
