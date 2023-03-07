@@ -66,7 +66,7 @@ public class BattleEngineTest {
 			stopWatch.start("第" + turnEngine.getRounds() + "轮战斗");
 			List<BattleReport> reports = turnEngine.battle();
 			stopWatch.stop();
-			logger.info("第{}轮战斗，战报：{}", turnEngine.getRounds() - 1, JsonUtils.getJsonSupport().toJsonString(reports));
+			logger.info("第{}轮战斗，战报：{}", turnEngine.getRounds() - 1, JsonUtils.getSupport().toJsonString(reports));
 		}
 		logger.info("用时{}ms, 战斗结束：{}", (System.currentTimeMillis() - t), stopWatch);
 	}
